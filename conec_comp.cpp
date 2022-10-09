@@ -5,8 +5,7 @@ int n = 6;
 bool used[MAXN];
 std::vector<int> comp;
 
-std::vector<int> g[MAXN] = {{1, 3},       {0, 2, 3}, {1, 3},
-                            {0, 1, 2, 4}, {3, 5},    {4}};
+std::vector<int> g[MAXN] = {{1, 3}, {0, 2, 3}, {1, 3}, {0, 1, 2}, {3, 5}, {4}};
 
 void dfs(int v) {
   used[v] = true;
