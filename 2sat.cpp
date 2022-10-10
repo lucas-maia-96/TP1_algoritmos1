@@ -4,12 +4,27 @@
 
 using namespace std;
 
-vector<vector<int>> adj, adj_t;
-vector<bool> used;
-vector<int> order, comp;
-vector<bool> assignment;
+vector<vector<int>> adj,
+    adj_t;  // Lista de adjacencia e a transposta(ordem das arestas invertida)
+vector<bool>
+    used;  // vetor para registrar se o vertice ja foi visitado (na dfs)
+vector<int> order;  // order: vetor que registra a ordem de saida dos vertices
+                    // IMPORTANTE para rodar a segunda DFS na ordem descescente
+                    // de tempo de saida.
+vector<int> comp;   // comp: vetor para registrar a qual componente fortemente
+                    // conectado cada vertice pertence (importante para saber a
+                    // existencia de solucao do problema)
+vector<bool> assignment;  // vetor para registrar se a proposta deve ser aceita
+                          // ou nao (util para encontrar uma solucao, mas como
+                          // queremos apenas saber a existencia esse vetor se
+                          // torna nao necessario, de forma que sua retirada nao
+                          // afeta na resolucao do trabalho. Decidi manter pois,
+                          // para saber uma solucao de um problema, basta
+                          // imprimir esse vetor) ATENCAO: numero grande de
+                          // propostas geram um output igualmente grande
 
-void dfs1(int v) {
+void dfs1(int v) {  // DFS simples, busca em profundidade e registramos apenas a
+                    // ordem de saida
   used[v] = true;
   for (int u : adj[v]) {
     if (!used[u]) dfs1(u);
@@ -17,43 +32,78 @@ void dfs1(int v) {
   order.push_back(v);
 }
 
-void dfs2(int v, int cl) {
+void dfs2(int v,
+          int cl) {  // DFS simples, porem como é a segunda, seguindo a ordem
+                     // topologia e no grafo transposto, conseguimos registrar
+                     // as componentes fortemente conectados de cada vertice
   comp[v] = cl;
   for (int u : adj_t[v]) {
     if (comp[u] == -1) dfs2(u, cl);
   }
 }
 
-bool solve_2SAT(int n) {
+bool solve_2SAT(int n) {  // Algoritmo que vai encontrar a solucao
   order.clear();
   used.clear();
   comp.clear();
-  assignment.clear();
-  used.assign(n, false);
+  assignment.clear();  // Limpamos todos os vetores, pois no trabalho calculamos
+                       // a solucao para varios problemas e para evitar qualquer
+                       // possivel influencia
+  used.assign(
+      n,
+      false);  // inicializacao do vetor used com todos os vertices como false
   for (int i = 0; i < n; ++i) {
-    if (!used[i]) dfs1(i);
+    if (!used[i])
+      dfs1(i);  // roda dfs no grafo, vertices ja vistos nao sao revisitados
   }
 
-  comp.assign(n, -1);
+  comp.assign(n, -1);  // inicializa o vetor que registra a componente
+                       // formetemte conectado de cada vertice.
   for (int i = 0, j = 0; i < n; ++i) {
     int v = order[n - i - 1];
-    if (comp[v] == -1) dfs2(v, j++);
+    if (comp[v] == -1)
+      dfs2(v, j++);  // calcula o compentente fortemente conctado de cada
+                     // vertice com a segunda DFS, seguindo a ordem topologica e
+                     // e no grafo trasnposto.
   }
 
-  assignment.assign(n / 2, false);
+  assignment.assign(
+      n / 2, false);  // vetor que registra uma solucao para cada proporta de
+                      // campanha (vetor nao necessario para o trabalho, mas de
+                      // interesse em manter no programa)
   for (int i = 0; i < n; i += 2) {
-    if (comp[i] == comp[i + 1]) return false;
+    if (comp[i] == comp[i + 1])
+      return false;  // *** PARTE IMPORTANTE *** ASSIM QUE ENCONTRA UMA PROPOSTA
+                     // E SUA NEGACAO NA MESMA COMPONENTE FORTEMENTE CONECTADO,
+                     // O PROBLEMA JA NAO TEM SOLUCAO!!!
     assignment[i / 2] = comp[i] > comp[i + 1];
   }
-  return true;
+  return true;  // caso nenhuma contradicao seja encontrada no for anterior,
+                // entao o problema tem solucao
 }
 
 void add_disjunction(int a, bool na, int b, bool nb) {
-  // na and nb signify whether a and b are to be negated
-  a = 2 * a ^ na;
-  b = 2 * b ^ nb;
-  int neg_a = a ^ 1;
-  int neg_b = b ^ 1;
+  // na e nb sao booleanos para marcar quando é a negacao da proporta a ou b
+  int neg_a;
+  int neg_b;
+
+  a = 2 * a;
+  b = 2 * b;
+
+  if (na) {
+    neg_a = a;
+    a += 1;
+  } else {
+    neg_a = a + 1;
+  }
+
+  if (nb) {
+    neg_b = b;
+    b += 1;
+  } else {
+    neg_b = b + 1;
+  }
+
   adj[neg_a].push_back(b);
   adj[neg_b].push_back(a);
   adj_t[b].push_back(neg_a);
@@ -98,6 +148,7 @@ int main() {
           nb = true;
           b *= -1;
         }
+        if (a == 0 and b == 0) continue;
         add_disjunction(a, na, b, nb);
       }
     }
@@ -107,6 +158,8 @@ int main() {
     else
       cout << "nao" << endl;
 
+    // for (bool resp : assignment) cout << resp << " ";   ***** IMPRESSAO DA
+    // SOLUCAO cout << endl;
     for (vector<int> v : adj) v.clear();
     for (vector<int> v : adj_t) v.clear();
     adj.clear();
