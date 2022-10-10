@@ -84,6 +84,8 @@ bool solve_2SAT(int n) {  // Algoritmo que vai encontrar a solucao
 
 void add_disjunction(int a, bool na, int b, bool nb) {
   // na e nb sao booleanos para marcar quando é a negacao da proporta a ou b
+  // aqui é feita as transformacoes para colocar a->2a e !a->2a+1
+  // alem disso, ja é criado junto o grafo transposto
   int neg_a;
   int neg_b;
 
@@ -111,25 +113,26 @@ void add_disjunction(int a, bool na, int b, bool nb) {
 }
 
 int main() {
-  ifstream entrada;
-  int n_seg, n_prop;
-  int a, b;
-  bool na, nb;
-  bool res;
-  int i, j;
-
-  entrada.open("in.txt");
+  int n_seg, n_prop;  // numero de seguidores e numero de propostas de
+                      // propaganda
+  int a, b;           // propostas escolhidas pelos seguidores
+  bool na, nb;  // usar true quando for as escolhas que o seguidor NAO quer
+  bool res;     // resposta se o problema tem solucao ou nao
+  int i, j;     // variaveis para iterar os loops
 
   while (1) {
-    entrada >> n_seg >> n_prop;
-    adj.assign(2 * n_prop + 2, {});
+    cin >> n_seg >> n_prop;
+    adj.assign(2 * n_prop + 2,
+               {});  // alocacao dos grafos: é o dobro + 2 porque uso a X
+                     // proposta com o indice 2*X e !X como 2*X + 1 e pulo o
+                     // indice 0 (e consequentemente 1) do vetor;
     adj_t.assign(2 * n_prop + 2, {});
 
-    if (n_seg == 0 || n_prop == 0) break;
+    if (n_seg == 0 || n_prop == 0) break;  // condicao de parada do loop
 
     for (i = 0; i < n_seg; i++) {
-      for (j = 0; j < 2; j++) {
-        entrada >> a >> b;
+      for (j = 0; j < 2; j++) {  // leitura das escolhas dos seguidores
+        cin >> a >> b;
         if (a == 0) a = b;
         if (b == 0) b = a;
         if (j == 1) {
@@ -149,22 +152,20 @@ int main() {
           b *= -1;
         }
         if (a == 0 and b == 0) continue;
-        add_disjunction(a, na, b, nb);
+        add_disjunction(a, na, b, nb);  // coloca as escolhas nos grafos
       }
     }
-    res = solve_2SAT(2 * n_prop);
+    res = solve_2SAT(2 * n_prop);  // resolve o problema
     if (res)
       cout << "sim" << endl;
     else
       cout << "nao" << endl;
 
-    // for (bool resp : assignment) cout << resp << " ";   ***** IMPRESSAO DA
-    // SOLUCAO cout << endl;
+    /*  for (bool resp : assignment) cout << resp << " ";   ***** IMPRESSAO DA
+        cout << endl; */
     for (vector<int> v : adj) v.clear();
     for (vector<int> v : adj_t) v.clear();
     adj.clear();
     adj_t.clear();
   }
-
-  entrada.close();
 }
